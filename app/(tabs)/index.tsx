@@ -1,70 +1,73 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
+import { FontAwesome } from '@expo/vector-icons';
+import HomeScreen from './HomeScreen';
+import SearchScreen from './SearchScreen';
+import LibraryScreen from './LibraryScreen';
+import MusicList from './MusicList';
+import MusicPlayerScreen from './MusicPlayerScreen';
+import { useThemeColor } from '@/hooks/useThemeColor';
+import { View } from 'react-native';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-export default function HomeScreen() {
+function MusicStack() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="MusicList" component={MusicList} /> 
+      <Stack.Screen name="MusicPlayer" component={MusicPlayerScreen} /> 
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+export default function Index() {
+  const MyTheme = useThemeColor;
+
+  return (
+    <NavigationContainer theme={MyTheme} independent={true}>
+      <View style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            tabBarIcon: ({ color }) => {
+              let iconName;
+
+              if (route.name === 'Home') {
+                iconName = 'home';
+              } else if (route.name === 'Search') {
+                iconName = 'search';
+              } else if (route.name === 'Library') {
+                iconName = 'bars';
+              } else if (route.name === 'Music') {
+                iconName = 'music';
+              }
+
+              return <FontAwesome name={iconName as undefined} size={35} color={color} />;
+            },
+            tabBarShowLabel: false,
+            tabBarStyle: { 
+              backgroundColor: MyTheme.colors.card, 
+              paddingBottom: 40, 
+              paddingTop: 40, 
+              borderTopLeftRadius: 20, 
+              borderTopRightRadius: 20,
+              borderWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+            },
+            tabBarActiveTintColor: MyTheme.colors.iconSelect,
+            tabBarInactiveTintColor: MyTheme.colors.iconDefault,
+            headerShown: false
+          })}
+        >
+          <Tab.Screen name="Home" component={HomeScreen} />
+          <Tab.Screen name="Search" component={SearchScreen} />
+          <Tab.Screen name="Library" component={LibraryScreen} />
+          <Tab.Screen name="Music" component={MusicStack} />
+        </Tab.Navigator>
+      </View>
+    </NavigationContainer>
+  );
+}
