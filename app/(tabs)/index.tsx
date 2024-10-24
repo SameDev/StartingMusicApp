@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import { FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import HomeScreen from './HomeScreen';
 import SearchScreen from './SearchScreen';
 import LibraryScreen from './LibraryScreen';
@@ -29,44 +29,52 @@ export default function Index() {
   return (
     <NavigationContainer theme={MyTheme} independent={true}>
       <View style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
-        <Tab.Navigator
-          screenOptions={({ route }) => ({
-            tabBarIcon: ({ color }) => {
-              let iconName;
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color }) => {
+            const iconName = route.name === 'Home' 
+              ? 'home' 
+              : route.name === 'Pesquisar' 
+              ? 'search' 
+              : route.name === 'Biblioteca' 
+              ? 'menu' 
+              : route.name === 'Musica' 
+              ? 'music-note' 
+              : undefined;
 
-              if (route.name === 'Home') {
-                iconName = 'home';
-              } else if (route.name === 'Search') {
-                iconName = 'search';
-              } else if (route.name === 'Library') {
-                iconName = 'bars';
-              } else if (route.name === 'Music') {
-                iconName = 'music';
-              }
+            return <MaterialIcons name={iconName} size={28} color={color} />; 
+          },
+          tabBarShowLabel: true,
+          tabBarLabelStyle: {
+            fontSize: 12, 
+          },
+          tabBarStyle: { 
+            backgroundColor: MyTheme.colors.card, 
+            height: 90, 
+            paddingBottom: 20,
+            paddingTop: 20, 
+            borderTopLeftRadius: 20, 
+            borderTopRightRadius: 20,
+            elevation: 5, 
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            borderTopWidth: 1, 
+            borderTopColor: '#ddd',
+          },
+          tabBarActiveTintColor: MyTheme.colors.iconSelect,
+          tabBarInactiveTintColor: MyTheme.colors.iconDefault,
+          headerShown: false
+        })}
+      >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Pesquisar" component={SearchScreen} />
+        <Tab.Screen name="Biblioteca" component={LibraryScreen} />
+        <Tab.Screen name="Musica" component={MusicStack} />
+      </Tab.Navigator>
 
-              return <FontAwesome name={iconName as undefined} size={35} color={color} />;
-            },
-            tabBarShowLabel: false,
-            tabBarStyle: { 
-              backgroundColor: MyTheme.colors.card, 
-              paddingBottom: 40, 
-              paddingTop: 40, 
-              borderTopLeftRadius: 20, 
-              borderTopRightRadius: 20,
-              borderWidth: 0,
-              elevation: 0,
-              shadowOpacity: 0,
-            },
-            tabBarActiveTintColor: MyTheme.colors.iconSelect,
-            tabBarInactiveTintColor: MyTheme.colors.iconDefault,
-            headerShown: false
-          })}
-        >
-          <Tab.Screen name="Home" component={HomeScreen} />
-          <Tab.Screen name="Search" component={SearchScreen} />
-          <Tab.Screen name="Library" component={LibraryScreen} />
-          <Tab.Screen name="Music" component={MusicStack} />
-        </Tab.Navigator>
+
       </View>
     </NavigationContainer>
   );
