@@ -42,3 +42,18 @@ export interface Music {
     artistaId: string[];
     tags: Tags[];
   }
+  export interface MusicRec {
+    id: number;
+    name: string;
+    artist: string;
+    url: string;
+    duration: string;
+    release_date: string;
+    image_url: string;
+    albumId: number;
+    tags: { id: number; name: string }[];
+    artistId: number[];
+    playlist: any[];
+    userLiked: any[]; 
+    
+  }

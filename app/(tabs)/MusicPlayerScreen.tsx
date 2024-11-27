@@ -1,40 +1,68 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
+import { Audio } from 'expo-av';
+import { Music } from '@/types/apiRef';
 
 const MusicPlayerScreen = () => {
-  const route = useRoute();  // Para acessar os parâmetros
-  const { song } = route.params;  // Recebe a música passada como parâmetro
+  const route = useRoute();
+  const { song } = route.params as { song: Music };
+
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Função para carregar e reproduzir a música
+  const playSound = async () => {
+    if (sound) {
+      await sound.stopAsync();
+    }
+    
+    const { sound: newSound } = await Audio.Sound.createAsync(
+      { uri: song.url }
+    );
+
+    setSound(newSound);
+    await newSound.playAsync();
+    setIsPlaying(true);
+  };
+
+  // Função para pausar a música
+  const pauseSound = async () => {
+    if (sound) {
+      await sound.pauseAsync();
+      setIsPlaying(false);
+    }
+  };
+
+  // Limpa o som ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, [sound]);
 
   return (
     <View style={styles.container}>
-      {/* Imagem do álbum */}
       <Image 
         source={{ uri: song.image_url }} 
         style={styles.albumArt}
       />
       
-      {/* Nome da música e artista */}
       <Text style={styles.songTitle}>{song.nome}</Text>
       <Text style={styles.artistName}>{song.artista}</Text>
 
-      {/* Controles do player */}
       <View style={styles.controlsContainer}>
         <TouchableOpacity>
           <FontAwesome name="heart-o" size={30} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="step-backward" size={40} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={playSound}>
           <FontAwesome name="play" size={50} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="step-forward" size={40} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity>
-          <FontAwesome name="random" size={30} color="#fff" />
+        <TouchableOpacity onPress={pauseSound}>
+          <FontAwesome name="pause" size={50} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>
@@ -72,3 +100,4 @@ const styles = StyleSheet.create({
 });
 
 export default MusicPlayerScreen;
+ 
