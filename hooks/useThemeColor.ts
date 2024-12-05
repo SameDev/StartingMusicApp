@@ -11,6 +11,7 @@ export const useThemeColor = {
     text: Colors.text,
     iconSelect: Colors.tabIconSelected,
     iconDefault: Colors.tabIconDefault,
-    accent: Colors.accent           
+    accent: Colors.accent,
+    secondary: Colors.secondary         
   },
 };

@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, Image } from 'react-native';
-import { useForm, Controller, SubmitHandler } from 'react-hook-form';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TouchableOpacity } from 'react-native-gesture-handler';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import React from "react";
+import { View, Text, TextInput, StyleSheet, Alert, Image } from "react-native";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { useThemeColor } from "@/hooks/useThemeColor";
 
 const MyTheme = useThemeColor;
 
@@ -20,36 +20,64 @@ interface LoginFormInputs {
 const api_url = "https://starting-music.onrender.com/user/login/";
 
 export default function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginFormInputs>({
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormInputs>({
     defaultValues: {
-      username: '',
-      password: '',
+      username: "",
+      password: "",
     },
   });
 
   const onSubmit: SubmitHandler<LoginFormInputs> = async (data) => {
     try {
       const response = await fetch(api_url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: data.username, senha: data.password }),
       });
 
       if (!response.ok) {
-        Alert.alert("Erro de login", "Credenciais inválidas ou erro no servidor.");
+        Alert.alert(
+          "Erro de login",
+          "Credenciais inválidas ou erro no servidor."
+        );
         return;
       }
 
-      const jwtToken = response.headers.get('Authorization') || '';
+      const jwtToken = response.headers.get("Authorization") || "";
       const responseData = await response.json();
 
       if (jwtToken && responseData.user) {
-        const { id, email, nome, cargo, foto_perfil, tags, desc, data_nasc, banner_perfil } = responseData.user;
+        const {
+          id,
+          email,
+          nome,
+          cargo,
+          foto_perfil,
+          tags,
+          desc,
+          data_nasc,
+          banner_perfil,
+        } = responseData.user;
 
-        await AsyncStorage.setItem('jwtToken', jwtToken);
-        await AsyncStorage.setItem('userData', JSON.stringify({
-          id, email, nome, cargo, foto_perfil, tags, desc, data_nasc, banner_perfil,
-        }));
+        await AsyncStorage.setItem("jwtToken", jwtToken);
+        await AsyncStorage.setItem(
+          "userData",
+          JSON.stringify({
+            id,
+            email,
+            nome,
+            cargo,
+            foto_perfil,
+            tags,
+            desc,
+            data_nasc,
+            banner_perfil,
+          })
+        );
 
         onLogin();
       } else {
@@ -63,59 +91,71 @@ export default function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.imageBox}>
-        {/* <Image
-          style={styles.image}
-          source={require('@/assets/images/logo.png') ||
-            { uri: 'https://starting-music-artista.vercel.app/_vercel/image?url=/logo.svg&w=1536&q=100' }}
-          resizeMode="contain"
-        /> */}
-      </View>
-      <Text style={styles.title}>Login do Usuário</Text>
-      <Controller
-        control={control}
-        rules={{ required: true }}
-        name="username"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value || ''}
-            placeholder="E-mail"
-            placeholderTextColor="#A0A0A0"
+      <View style={styles.containerBox}>
+        <View style={styles.imageBox}>
+          <Image
+            style={styles.image}
+            source={
+              require("@/assets/images/logo.png") || {
+                uri: "https://starting-music-artista.vercel.app/_vercel/image?url=/logo.svg&w=1536&q=100",
+              }
+            }
+            resizeMode="contain"
           />
+        </View>
+        <Text style={styles.title}>Login do Usuário</Text>
+        <Controller
+          control={control}
+          rules={{ required: true }}
+          name="username"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={styles.input}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value || ""}
+              placeholder="E-mail"
+              placeholderTextColor="#A0A0A0"
+            />
+          )}
+        />
+        {errors.username && (
+          <Text style={styles.errorText}>O usuário é obrigatório.</Text>
         )}
-      />
-      {errors.username && <Text style={styles.errorText}>O usuário é obrigatório.</Text>}
 
-      <Controller
-        control={control}
-        rules={{ required: true }}
-        name="password"
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            style={styles.input}
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value || ''}
-            placeholder="Senha"
-            secureTextEntry
-            placeholderTextColor="#A0A0A0"
-          />
+        <Controller
+          control={control}
+          rules={{ required: true }}
+          name="password"
+          render={({ field: { onChange, onBlur, value } }) => (
+            <TextInput
+              style={styles.input}
+              onBlur={onBlur}
+              onChangeText={onChange}
+              value={value || ""}
+              placeholder="Senha"
+              secureTextEntry
+              placeholderTextColor="#A0A0A0"
+            />
+          )}
+        />
+        {errors.password && (
+          <Text style={styles.errorText}>A senha é obrigatória.</Text>
         )}
-      />
-      {errors.password && <Text style={styles.errorText}>A senha é obrigatória.</Text>}
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit(onSubmit)}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <View style={styles.registerContainer}>
-        <Text style={styles.registerText}>Não tem uma conta ainda?</Text>
-        <TouchableOpacity onPress={onRegister}>
-          <Text style={styles.registerButton}>Cadastro</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit(onSubmit)}
+        >
+          <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Não tem uma conta ainda?</Text>
+          <TouchableOpacity onPress={onRegister}>
+            <Text style={styles.registerButton}>Cadastro</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -124,12 +164,18 @@ export default function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 24,
-    backgroundColor: '#1E1E2C',
+    backgroundColor: MyTheme.colors.secondary,
+  },
+  containerBox: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    borderRadius: 10,
   },
   imageBox: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   image: {
@@ -138,49 +184,53 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "#FFFFFF",
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
   },
   input: {
     height: 50,
-    borderColor: '#292938',
+    borderColor: "#292938",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
     backgroundColor: MyTheme.colors.accent,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   button: {
-    backgroundColor: '#6A5ACD',
+    backgroundColor: "#402585",
     paddingVertical: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   buttonText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    color: "#FFFFFF",
+    fontWeight: "bold",
     fontSize: 16,
   },
   registerContainer: {
     marginTop: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   registerText: {
-    color: '#A0A0A0',
+    color: "#A0A0A0",
     fontSize: 14,
   },
   registerButton: {
-    color: '#6A5ACD',
-    fontWeight: 'bold',
+    color: "#6A5ACD",
+    fontWeight: "bold",
     fontSize: 14,
     marginTop: 5,
   },
   errorText: {
-    color: '#FF6B6B',
+    color: "#FF6B6B",
     marginBottom: 10,
   },
 });

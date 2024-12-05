@@ -3,6 +3,9 @@ import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIn
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchSongs, fetchArtists } from '@/api/api';
 import { MusicRec, User } from '@/types/apiRef';
+import { useThemeColor } from '@/hooks/useThemeColor';
+
+const MyTheme = useThemeColor;
 
 const PLACEHOLDER_ARTIST_IMAGE = 'https://starting-music-artista.vercel.app/user-placeholder.jpeg';
 
@@ -11,12 +14,12 @@ const HomeScreen = () => {
   const [artists, setArtists] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch songs based on user ID
   const getSongs = async (userId: number) => {
     try {
       const response = await fetchSongs(userId);
       if (Array.isArray(response)) {
         setSongs(response);
+        console.log(response)
       } else {
         throw new Error('Formato inesperado na resposta de músicas.');
       }
@@ -26,7 +29,6 @@ const HomeScreen = () => {
     }
   };
 
-  // Fetch artists
   const getArtists = async () => {
     try {
       const data = await fetchArtists();
@@ -41,7 +43,6 @@ const HomeScreen = () => {
     }
   };
 
-  // Fetch user data from storage
   const getUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem('userData');
@@ -72,23 +73,13 @@ const HomeScreen = () => {
     fetchData();
   }, []);
 
-  // Render individual song item
   const renderSongItem = (song: MusicRec) => (
     <TouchableOpacity style={styles.songCard} key={`song-${song.id}`}>
-      <Image source={{ uri: song.image_url }} style={styles.songImage} />
-      <Text style={styles.songName}>{song.name}</Text>
-      <Text style={styles.artistName}>{song.artist}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {song.tags.map((tag, index) => (
-          <Text key={`tag-${song.id}-${index}`} style={styles.tag}>
-            {tag.name}
-          </Text>
-        ))}
-      </ScrollView>
+      <Image source={{ uri: song.image_url || 'https://starting-music-artista.vercel.app/img-placeholder.png' }} style={styles.songImage} />
+      <Text style={styles.songName}>{song.nome}</Text>
+      <Text style={styles.artistName}>{song.artista}</Text>
     </TouchableOpacity>
   );
-
-  // Render individual artist item
   const renderArtistItem = (artist: User) => (
     <View style={styles.artistCard} key={`artist-${artist.id}`}>
       <Image
@@ -117,8 +108,8 @@ const HomeScreen = () => {
       />
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recomendações</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <Text style={styles.sectionTitle}>Escolhas feitas para você</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           {songs.length > 0 ? (
             songs.map(renderSongItem)
           ) : (
@@ -129,7 +120,7 @@ const HomeScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Novos Artistas</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           {artists.length > 0 ? (
             artists.map(renderArtistItem)
           ) : (
@@ -195,15 +186,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-  },
-  tag: {
-    color: '#aaa',
-    fontSize: 10,
-    marginHorizontal: 5,
-    backgroundColor: '#333',
-    borderRadius: 5,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
   },
   emptyMessage: {
     color: '#aaa',

@@ -1,5 +1,5 @@
 export interface Music {
-    id: number;
+    id: string;
     nome: string;
     artista: string;
     image_url: string;
@@ -13,7 +13,7 @@ export interface Music {
   }
   
   export interface User {
-    id: number;
+    id: string;
     email: string;
     nome: string;
     cargo: string;
@@ -24,14 +24,14 @@ export interface Music {
   }
   
   export interface Tags {
-    id: number;
+    id: string;
     nome: string;
     ativo: boolean;
     musicas: Music[];
   }
   
   export interface Album {
-    id: number;
+    id:string;
     lancamento: string;
     nome: string;
     artista: string;
@@ -43,15 +43,15 @@ export interface Music {
     tags: Tags[];
   }
   export interface MusicRec {
-    id: number;
-    name: string;
-    artist: string;
+    id: string;
+    nome: string;
+    artista: string;
     url: string;
-    duration: string;
-    release_date: string;
+    duracao: string;
+    data_lanc: string;
     image_url: string;
     albumId: number;
-    tags: { id: number; name: string }[];
+    tags: [];
     artistId: number[];
     playlist: any[];
     userLiked: any[]; 
