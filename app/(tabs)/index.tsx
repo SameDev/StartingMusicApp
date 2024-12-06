@@ -9,7 +9,6 @@ import SearchScreen from './SearchScreen';
 import LibraryScreen from './LibraryScreen';
 import LoginScreen from './LoginScreen';
 import RegisterScreen from './RegisterScreen';
-import AlbumScreen from './AlbumScreen';
 import UserScreen from './UserScreen';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

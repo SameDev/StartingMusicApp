@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView,ActivityIndicator, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { fetchSongs, fetchArtists } from '@/api/api';
 import { MusicRec, User } from '@/types/apiRef';
 import { useThemeColor } from '@/hooks/useThemeColor';
@@ -19,7 +20,6 @@ const HomeScreen = () => {
       const response = await fetchSongs(userId);
       if (Array.isArray(response)) {
         setSongs(response);
-        console.log(response)
       } else {
         throw new Error('Formato inesperado na resposta de músicas.');
       }

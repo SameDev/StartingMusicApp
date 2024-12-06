@@ -12,7 +12,6 @@ type RootStackParamList = {
     Playlist: { playlistId: string };
   };
 
-// Definindo o tipo da rota
 type AlbumRouteProp = RouteProp<RootStackParamList, 'Album'>;
 
 const AlbumScreen: React.FC = () => {
