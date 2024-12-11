@@ -1,12 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView,ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { useNavigation } from '@react-navigation/native';
 import { fetchSongs, fetchArtists } from '@/api/api';
-import { MusicRec, User } from '@/types/apiRef';
+import { Music, MusicRec, User } from '@/types/apiRef';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const MyTheme = useThemeColor;
+import { usePlayer } from '@/components/PlayerProvider';
+
+type RootStackParamList = {
+  HomeScreen: any;
+  MusicPlayer: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'HomeScreen'>;
 
 const PLACEHOLDER_ARTIST_IMAGE = 'https://starting-music-artista.vercel.app/user-placeholder.jpeg';
 
@@ -14,6 +31,9 @@ const HomeScreen = () => {
   const [songs, setSongs] = useState<MusicRec[]>([]);
   const [artists, setArtists] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const navigation = useNavigation<NavigationProp>();
+  const { setCurrentSong } = usePlayer();
 
   const getSongs = async (userId: number) => {
     try {
@@ -73,13 +93,26 @@ const HomeScreen = () => {
     fetchData();
   }, []);
 
+  const handleSongPress = (song: MusicRec) => {
+    setCurrentSong(song as unknown as Music); 
+    navigation.navigate('MusicPlayer'); 
+  };
+
   const renderSongItem = (song: MusicRec) => (
-    <TouchableOpacity style={styles.songCard} key={`song-${song.id}`}>
-      <Image source={{ uri: song.image_url || 'https://starting-music-artista.vercel.app/img-placeholder.png' }} style={styles.songImage} />
+    <TouchableOpacity
+      style={styles.songCard}
+      key={`song-${song.id}`}
+      onPress={() => handleSongPress(song)}
+    >
+      <Image
+        source={{ uri: song.image_url || 'https://starting-music-artista.vercel.app/img-placeholder.png' }}
+        style={styles.songImage}
+      />
       <Text style={styles.songName}>{song.nome}</Text>
       <Text style={styles.artistName}>{song.artista}</Text>
     </TouchableOpacity>
   );
+
   const renderArtistItem = (artist: User) => (
     <View style={styles.artistCard} key={`artist-${artist.id}`}>
       <Image
@@ -109,7 +142,7 @@ const HomeScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Escolhas feitas para você</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {songs.length > 0 ? (
             songs.map(renderSongItem)
           ) : (
@@ -120,7 +153,7 @@ const HomeScreen = () => {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Novos Artistas</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {artists.length > 0 ? (
             artists.map(renderArtistItem)
           ) : (

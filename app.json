@@ -3,41 +3,57 @@
     "name": "StartingMusicApp",
     "slug": "StartingMusicApp",
     "version": "1.0.0",
+    "newArchEnabled": true,
     "orientation": "portrait",
-    "icon": "https://starting-music-artista.vercel.app/_vercel/image?url=/logo.svg&w=1536&q=100",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "https://starting-music-artista.vercel.app/_vercel/image?url=/logo.svg&w=1536&q=100",
+      "image": "./assets/images/logo.png", 
       "resizeMode": "contain",
-      "backgroundColor": "#191A2E"
+      "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.startingmusicapp",  
+      "infoPlist": {
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      }
     },
-    "newArchEnabled": true,
     "android": {
+      "package": "com.StartingMusicApp",
+      "useNextNotificationsApi": true, 
+      "permissions": [
+        "CAMERA",
+        "MEDIA_LIBRARY",
+        "CAMERA_ROLL",
+        "NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
-        "foregroundImage": "https://starting-music-artista.vercel.app/_vercel/image?url=/logo.svg&w=1536&q=100",
-        "backgroundColor": "#191A2E"
+        "foregroundImage": "./assets/images/logo.png",  
+        "backgroundColor": "#ffffff"
       },
-      "package": "com.StartingMusicApp"
+      "notification": {
+        "icon": "./assets/images/logo.png",
+        "color": "#000000",
+        "sound": true
+      }
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
-      "favicon": "https://starting-music-artista.vercel.app/_vercel/image?url=/logo.svg&w=1536&q=100"
+      "output": "static"
     },
     "plugins": [
       "expo-router",
       "expo-image-picker",
       "expo-font",
-      "expo-audio"
+      "expo-audio",
+      "expo-notifications"  
     ],
     "permissions": [
       "CAMERA",
       "MEDIA_LIBRARY",
-      "CAMERA_ROLL"
+      "CAMERA_ROLL",
+      "NOTIFICATIONS"
     ],
     "experiments": {
       "typedRoutes": true

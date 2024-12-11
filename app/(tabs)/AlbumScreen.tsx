@@ -3,49 +3,27 @@ import { View, Text, Image, FlatList, StyleSheet, TouchableOpacity } from 'react
 import { ScrollView } from 'react-native-gesture-handler';
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
+import { Album, Music, User } from '@/types/apiRef';
 
 type RootStackParamList = {
     Search: undefined;
-    MusicPlayer: { musicId: string };
-    Artista: { artistId: string };
-    Album: { albumId: string };
-    Playlist: { playlistId: string };
+    MusicPlayer: { song: Music[] };
+    Artista: { artista: User[] };
+    Album: { album: Album[] };
+    Playlist: { playlist: [] };
   };
 
 type AlbumRouteProp = RouteProp<RootStackParamList, 'Album'>;
 
 const AlbumScreen: React.FC = () => {
-  const route = useRoute<AlbumRouteProp>();
-  const { albumId } = route.params;
+  const route = useRoute<AlbumRouteProp>();  
+  const { album } = route.params as unknown as { album: Album };
 
-  const [album, setAlbum] = useState<any>(null);
-  const [musicas, setMusicas] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchAlbumData = async () => {
-      try {
-        const albumResponse = await fetch(`https://api.exemplo.com/album/${albumId}`); 
-        const albumData = await albumResponse.json();
-        setAlbum(albumData);
-
-        const musicasResponse = await fetch(`https://api.exemplo.com/album/${albumId}/musicas`); // Substitua pela URL real da API
-        const musicasData = await musicasResponse.json();
-        setMusicas(musicasData);
-      } catch (error) {
-        console.error('Erro ao buscar dados do álbum:', error);
-      }
-    };
-
-    fetchAlbumData();
-  }, [albumId]);
-
-  if (!album) {
-    return <Text>Carregando...</Text>; // Exibe enquanto os dados não são carregados
-  }
+  const musicas = album.musicas || [];
 
   const renderMusicItem = ({ item }: { item: any }) => (
     <View style={styles.musicItem}>
-      <Image source={{ uri: album.capa }} style={styles.musicImage} />
+      <Image source={{ uri: album.image_url }} style={styles.musicImage} />
       <View style={styles.musicInfo}>
         <Text style={styles.musicName}>{item.nome}</Text>
         <Text style={styles.musicArtist}>{item.artista}</Text>
@@ -66,19 +44,17 @@ const AlbumScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header do álbum */}
       <View style={styles.albumHeader}>
-        <Image source={{ uri: album.capa }} style={styles.albumImage} />
+        <Image source={{ uri: album.image_url }} style={styles.albumImage} />
         <View style={styles.albumInfo}>
           <Text style={styles.albumTitle}>{album.nome}</Text>
           <Text style={styles.albumDetails}>
-            {album.artista} • {album.lancamento} • {musicas.length} músicas • {album.duracao}
+            {album.artista} • {album.lancamento} • {musicas.length}
           </Text>
-          <Text style={styles.albumDescription}>{album.descricao}</Text>
+          <Text style={styles.albumDescription}>{album.desc}</Text>
         </View>
       </View>
 
-      {/* Lista de músicas */}
       <FlatList
         data={musicas}
         keyExtractor={(item) => item.id.toString()}
