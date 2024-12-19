@@ -15,8 +15,9 @@ import LoginScreen from './LoginScreen';
 import RegisterScreen from './RegisterScreen';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { PlayerProvider, usePlayer } from '@/components/PlayerProvider';
-
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+
+
 
 type TabParamList = {
   Home: undefined;

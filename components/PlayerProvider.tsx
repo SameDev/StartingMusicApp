@@ -1,10 +1,19 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
-import { Audio } from "expo-av";
-import { Music } from "@/types/apiRef"; // Assumindo que "Music" é um tipo previamente definido
+import TrackPlayer, { 
+  Event, 
+  useTrackPlayerEvents, 
+  State, 
+  usePlaybackState, 
+  useProgress, 
+  Capability, 
+  AppKilledPlaybackBehavior,
+} from "react-native-track-player";
+import PlayerService from "@/services/PlayerService";
+import { Music } from "@/types/apiRef";
 
 type PlayerContextType = {
   currentSong: Music | null;
-  setCurrentSong: (song: Music) => void;
+  setCurrentSong: (song: Music) => Promise<void>;
   isPlayerVisible: boolean;
   setIsPlayerVisible: (visible: boolean) => void;
   isPlaying: boolean;
@@ -17,72 +26,76 @@ type PlayerContextType = {
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined);
 
-export const PlayerProvider = ({ children }: { children: ReactNode }) => {
-  const [currentSong, setCurrentSong] = useState<Music | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+const setupPlayer = async (): Promise<void> => {
+  await TrackPlayer.setupPlayer({ waitForBuffer: true });
+
+  await TrackPlayer.updateOptions({
+    capabilities: [
+      Capability.Play,
+      Capability.Pause,
+      Capability.SkipToNext,
+      Capability.SkipToPrevious,
+      Capability.Stop,
+    ],
+    compactCapabilities: [Capability.Play, Capability.Pause],
+    android: {
+      appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+    },
+  });
+};
+
+export const PlayerProvider = ({ children }: { children: ReactNode }): JSX.Element => {
+  const [currentSong, setCurrentSongState] = useState<Music | null>(null);
   const [isPlayerVisible, setIsPlayerVisible] = useState(false);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [position, setPosition] = useState(0);
+  const playbackState = usePlaybackState();
+  const { position, duration } = useProgress();
+
+  const isPlaying = playbackState === (State.Playing as any);
+
+  const setCurrentSong = async (song: Music): Promise<void> => {
+    setCurrentSongState(song);
+    await TrackPlayer.reset();
+    await TrackPlayer.add({
+      id: song.id,
+      url: song.url,
+      title: song.nome,
+      artist: song.artista,
+      artwork: song.image_url,
+    });
+    await TrackPlayer.play();
+  };
+
+  
+  useEffect(() => {
+    PlayerService.setupPlayer();
+    PlayerService.registerEvents();
+  }, []);
+  const handlePlayPause = async () => {
+    const state = await PlayerService.getPlayerState();
+    if (state === State.Playing) {
+      console.log('a')
+      await PlayerService.pause();
+    } else {
+      console.log('b')
+      await PlayerService.play();
+    }
+  };
+
+
+  const handleSeek = async (value: number): Promise<void> => {
+    const positionMillis = value * duration;
+    await TrackPlayer.seekTo(positionMillis);
+  };
 
   useEffect(() => {
-    if (!currentSong) return;
+    setupPlayer().catch(console.error);
+  }, []);
 
-    const loadAudio = async () => {
-      if (sound) {
-        await sound.unloadAsync();
-        setSound(null);
-      }
-      try {
-        const { sound: newSound } = await Audio.Sound.createAsync(
-          { uri: currentSong.url },
-          { shouldPlay: false }
-        );
-        setSound(newSound);
-        setIsPlaying(false);
-
-        newSound.setOnPlaybackStatusUpdate((status) => {
-          if (status.isLoaded) {
-            setPosition(status.positionMillis || 0);
-            setDuration(status.durationMillis || 0);
-            setProgress((status.positionMillis || 0) / (status.durationMillis || 1));
-            if (status.didJustFinish) {
-              setIsPlaying(false);
-            }
-          }
-        });
-      } catch (error) {
-        console.error("Erro ao carregar o áudio:", error);
-      }
-    };
-
-    loadAudio();
-
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [currentSong]);
-
-  const handlePlayPause = async () => {
-    if (sound) {
-      if (isPlaying) {
-        await sound.pauseAsync();
-      } else {
-        await sound.playAsync();
-      }
-      setIsPlaying(!isPlaying);
+  useTrackPlayerEvents([Event.PlaybackActiveTrackChanged, Event.PlaybackState], async (event) => {
+    if (event.type === Event.PlaybackActiveTrackChanged && event.track === null) {
+      setCurrentSongState(null);
     }
-  };
-
-  const handleSeek = async (value: number) => {
-    if (sound) {
-      const positionMillis = value * duration;
-      await sound.setPositionAsync(positionMillis);
-    }
-  };
+  });
 
   return (
     <PlayerContext.Provider
@@ -93,7 +106,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
         setIsPlayerVisible,
         isPlaying,
         handlePlayPause,
-        progress,
+        progress: position / (duration || 1),
         duration,
         position,
         handleSeek,
@@ -104,7 +117,7 @@ export const PlayerProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const usePlayer = () => {
+export const usePlayer = (): PlayerContextType => {
   const context = useContext(PlayerContext);
   if (!context) {
     throw new Error("usePlayer must be used within a PlayerProvider");

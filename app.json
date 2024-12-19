@@ -1,11 +1,13 @@
 {
   "expo": {
-    "name": "StartingMusicApp",
-    "slug": "StartingMusicApp",
+    "name": "startingmusicapp",
+    "slug": "startingmusicapp",
     "version": "1.0.0",
     "newArchEnabled": true,
     "orientation": "portrait",
-    "scheme": "myapp",
+    "autolinking": {
+      "searchPaths": ["../../packages"]
+    },
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/logo.png", 
@@ -14,13 +16,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.startingmusicapp",  
+      "bundleIdentifier": "com.startingmusicapp.samedev",  
       "infoPlist": {
         "UIBackgroundModes": ["fetch", "remote-notification"]
       }
     },
     "android": {
-      "package": "com.StartingMusicApp",
+      "package": "com.startingmusicapp.samedev",
       "useNextNotificationsApi": true, 
       "permissions": [
         "CAMERA",

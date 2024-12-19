@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { Audio } from "expo-av";
 import Slider from "@react-native-community/slider";
 import { LinearGradient } from "expo-linear-gradient";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,12 +13,9 @@ type RootStackParamList = {
   MusicPlayer: undefined;
 };
 
-type NavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "MusicPlayer"
->;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, "MusicPlayer">;
 
-const MusicPlayerScreen = () => {
+const MusicPlayerScreen: React.FC = () => {
   const {
     currentSong,
     isPlaying,
@@ -35,9 +31,9 @@ const MusicPlayerScreen = () => {
   useEffect(() => {
     setIsPlayerVisible(true);
     return () => setIsPlayerVisible(false);
-  }, []);
+  }, [setIsPlayerVisible]);
 
-  const formatTime = (millis: number) => {
+  const formatTime = (millis: number): string => {
     const minutes = Math.floor(millis / 60000);
     const seconds = Math.floor((millis % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
@@ -50,8 +46,6 @@ const MusicPlayerScreen = () => {
       </View>
     );
   }
-
-  
 
   return (
     <View style={styles.mainContainer}>
@@ -66,7 +60,7 @@ const MusicPlayerScreen = () => {
             setIsPlayerVisible(false);
           }}
         >
-          <FontAwesome6 name="arrow-left-long" size={24} color="#fff" />
+          <FontAwesome5 name="arrow-left" size={24} color="#fff" />
         </TouchableOpacity>
 
         <View style={styles.noSongContainer}>
@@ -95,21 +89,22 @@ const MusicPlayerScreen = () => {
           <View style={styles.controlsContainer}>
             <TouchableOpacity
               onPress={async () => {
-                const newPosition = Math.max(0, position - 10000);
-                await handleSeek(newPosition / duration); 
+                const newPosition = Math.max(0, position - 10);
+                await handleSeek(newPosition / duration);
               }}
             >
-              <FontAwesome6 name="arrow-rotate-left" size={30} color="#fff" />
+              <FontAwesome5 name="backward" size={30} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity onPress={handlePlayPause}>
-              <FontAwesome6 name={isPlaying ? "pause" : "play"} size={40} color="#fff" />
+              <FontAwesome5 name={isPlaying ? "pause" : "play"} size={40} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={async () => {
-                const newPosition = Math.min(duration, position + 10000)
-                await handleSeek(newPosition / duration); 
-              }}>
-              <FontAwesome6 name="arrow-rotate-right" size={30} color="#fff" />
+                const newPosition = Math.min(duration, position + 10);
+                await handleSeek(newPosition / duration);
+              }}
+            >
+              <FontAwesome5 name="forward" size={30} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -121,12 +116,6 @@ const MusicPlayerScreen = () => {
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, marginTop: 20 },
   backButton: { padding: 10, margin: 10 },
-  container: {
-    flex: 1,
-    alignItems: "center",
-    padding: 20,
-    justifyContent: "center",
-  },
   noSongContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   noSongText: { color: "#fff", fontSize: 18 },
   albumArt: { width: 250, height: 250, borderRadius: 15, marginBottom: 15 },
