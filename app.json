@@ -1,18 +1,19 @@
 {
+  "name": "Starting Music",
   "expo": {
-    "name": "startingmusicapp",
-    "slug": "startingmusicapp",
+    "name": "Starting Music",
+    "slug": "StartingMusicApp",
     "version": "1.0.0",
-    "newArchEnabled": true,
     "orientation": "portrait",
     "autolinking": {
       "searchPaths": ["../../packages"]
     },
-    "userInterfaceStyle": "automatic",
+    "scheme": "startingmusic",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/images/logo.png", 
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#202238"
     },
     "ios": {
       "supportsTablet": true,
@@ -32,11 +33,11 @@
       ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",  
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#202238"
       },
       "notification": {
         "icon": "./assets/images/logo.png",
-        "color": "#000000",
+        "color": "#202238",
         "sound": true
       }
     },
@@ -64,6 +65,13 @@
       "eas": {
         "projectId": "33f1af2a-b372-482c-ab62-d2312e00bded"
       }
-    }
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#191A2E",
+      "translucent": false,
+      "barStryle": "light-content"
+    },
+    "backgroundColor": "#191A2E",
+    "primaryColor": "#312464"
   }
 }

@@ -4,12 +4,12 @@ export interface Music {
     artista: string;
     image_url: string;
     url: string;
-    tags: Tags[];
-    artistaId: string[];
-    loadingBtn: boolean;
-    data_lanc: Date;
-    isPlaying: boolean
-    duracao: string;
+    tags?: Tags[];
+    artistaId?: string[];
+    loadingBtn?: boolean;
+    data_lanc?: Date;
+    isPlaying?: boolean
+    duracao?: string;
   }
   
   export interface User {

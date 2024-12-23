@@ -216,6 +216,7 @@ const SearchScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: MyTheme.colors.background,
     flex: 1,
     padding: 10,
   },

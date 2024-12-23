@@ -16,6 +16,8 @@ import { Music, MusicRec, User } from '@/types/apiRef';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+const MyTheme = useThemeColor;
+
 import { usePlayer } from '@/components/PlayerProvider';
 
 type RootStackParamList = {
@@ -33,7 +35,7 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
 
   const navigation = useNavigation<NavigationProp>();
-  const { setCurrentSong } = usePlayer();
+  const { setCurrentSong, setPlaylist } = usePlayer();
 
   const getSongs = async (userId: number) => {
     try {
@@ -93,9 +95,13 @@ const HomeScreen = () => {
     fetchData();
   }, []);
 
-  const handleSongPress = (song: MusicRec) => {
-    setCurrentSong(song as unknown as Music); 
-    navigation.navigate('MusicPlayer'); 
+  const handleSongPress = (selectedSong: MusicRec) => {
+    const queue = songs.slice(
+      songs.findIndex((song) => song.id === selectedSong.id)
+    );
+    setPlaylist(queue.map((song) => song as unknown as Music));
+    setCurrentSong(queue[0] as unknown as Music);
+    navigation.navigate('MusicPlayer');
   };
 
   const renderSongItem = (song: MusicRec) => (
@@ -167,10 +173,12 @@ const HomeScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: MyTheme.colors.background,
     flex: 1,
     padding: 20,
   },
   loadingContainer: {
+    backgroundColor: MyTheme.colors.background,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

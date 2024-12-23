@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Linking } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { FontAwesome6 } from '@expo/vector-icons';
@@ -16,8 +15,9 @@ import RegisterScreen from './RegisterScreen';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { PlayerProvider, usePlayer } from '@/components/PlayerProvider';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-
-
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import Slider from '@react-native-community/slider';
 
 type TabParamList = {
   Home: undefined;
@@ -31,27 +31,17 @@ type AppParamList = {
   MusicPlayer: undefined;
 } & TabParamList;
 
-import { CompositeNavigationProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Slider from '@react-native-community/slider';
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 type MainTabsNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<TabParamList>,
   NativeStackNavigationProp<AppParamList>
 >;
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
-
 function MainTabs({ navigation }: { navigation: MainTabsNavigationProp }) {
   const [userPhoto, setUserPhoto] = useState(null);
-  const { 
-    isPlayerVisible, 
-    currentSong, 
-    isPlaying, 
-    handlePlayPause,
-    progress } = usePlayer();
-
+  const { isPlayerVisible, currentSong, isPlaying, handlePlayPause, progress } = usePlayer();
   const MyTheme = useThemeColor;
 
   useEffect(() => {
@@ -66,8 +56,32 @@ function MainTabs({ navigation }: { navigation: MainTabsNavigationProp }) {
     fetchUserPhoto();
   }, []);
 
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      if (event.url === 'startingmusic://notification.click') {
+        navigation.navigate('MusicPlayer');
+      }
+    };
+  
+    const initDeepLink = async () => {
+      const url = await Linking.getInitialURL();
+      if (url) {
+        handleDeepLink({ url });
+      }
+    };
+  
+    Linking.addEventListener('url', handleDeepLink);
+  
+    initDeepLink();
+  
+    return () => {
+      Linking.removeAllListeners('url');
+    };
+  }, []);
+  
+
   return (
-    <View style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
+    <View style={{ flex: 1, backgroundColor: '#202238' }}>
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color }) => {
@@ -113,30 +127,29 @@ function MainTabs({ navigation }: { navigation: MainTabsNavigationProp }) {
       </Tab.Navigator>
 
       {!isPlayerVisible && currentSong && (
-      <View style={styles.minimizedPlayerContainer}>
-        <TouchableOpacity
-          style={styles.minimizedPlayer}
-          onPress={() => navigation.navigate('MusicPlayer')}
-        >
-          <Image
-            source={{ uri: currentSong.image_url }}
-            style={styles.albumArt}
-          />
-          <View style={styles.songInfo}>
-            <Text style={styles.songTitle}>{currentSong.nome || 'Nenhuma Música Tocando'}</Text>
-            <Text style={styles.songArtist}>{currentSong.artista || ''}</Text>
-          </View>
-          <TouchableOpacity onPress={handlePlayPause}>
-            <FontAwesome6
-              name={isPlaying ? 'pause' : 'play'}
-              size={24}
-              color="#fff"
-              style={styles.playIcon}
+        <View style={styles.minimizedPlayerContainer}>
+          <TouchableOpacity
+            style={styles.minimizedPlayer}
+            onPress={() => navigation.navigate('MusicPlayer')}
+          >
+            <Image
+              source={{ uri: currentSong.image_url }}
+              style={styles.albumArt}
             />
+            <View style={styles.songInfo}>
+              <Text style={styles.songTitle}>{currentSong.nome || 'Nenhuma Música Tocando'}</Text>
+              <Text style={styles.songArtist}>{currentSong.artista || ''}</Text>
+            </View>
+            <TouchableOpacity onPress={handlePlayPause}>
+              <FontAwesome6
+                name={isPlaying ? 'pause' : 'play'}
+                size={24}
+                color="#fff"
+                style={styles.playIcon}
+              />
+            </TouchableOpacity>
           </TouchableOpacity>
-          
-        </TouchableOpacity>
-        <Slider
+          <Slider
             style={styles.progressBar}
             minimumValue={0}
             maximumValue={1}
@@ -147,25 +160,28 @@ function MainTabs({ navigation }: { navigation: MainTabsNavigationProp }) {
             disabled={true}
           />
         </View>
-        
       )}
     </View>
   );
 }
 
 function MainStack() {
+  const MyTheme = useThemeColor;
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen
-        name="MusicPlayer"
-        component={MusicPlayerScreen}
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-        }}
-      />
-    </Stack.Navigator>
+    <View style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen
+          name="MusicPlayer"
+          component={MusicPlayerScreen}
+          options={{
+            presentation: 'modal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+      </Stack.Navigator>
+    </View>
   );
 }
 
@@ -175,35 +191,35 @@ export default function App() {
   const MyTheme = useThemeColor;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
       <PlayerProvider>
-        <NavigationContainer theme={MyTheme} independent={true}>
-          {isAuthenticated ? (
-            <MainStack />
-          ) : (
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              {isRegistering ? (
-                <Stack.Screen name="Cadastro">
-                  {() => (
-                    <RegisterScreen
-                      onRegister={() => setIsAuthenticated(true)}
-                      onBackToLogin={() => setIsRegistering(false)}
-                    />
-                  )}
-                </Stack.Screen>
-              ) : (
-                <Stack.Screen name="Login">
-                  {() => (
-                    <LoginScreen
-                      onLogin={() => setIsAuthenticated(true)}
-                      onRegister={() => setIsRegistering(true)}
-                    />
-                  )}
-                </Stack.Screen>
-              )}
-            </Stack.Navigator>
-          )}
-        </NavigationContainer>
+          <View style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
+            {isAuthenticated ? (
+              <MainStack/>
+            ) : (
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {isRegistering ? (
+                  <Stack.Screen name="Cadastro">
+                    {() => (
+                      <RegisterScreen
+                        onRegister={() => setIsAuthenticated(true)}
+                        onBackToLogin={() => setIsRegistering(false)}
+                      />
+                    )}
+                  </Stack.Screen>
+                ) : (
+                  <Stack.Screen name="Login">
+                    {() => (
+                      <LoginScreen
+                        onLogin={() => setIsAuthenticated(true)}
+                        onRegister={() => setIsRegistering(true)}
+                      />
+                    )}
+                  </Stack.Screen>
+                )}
+              </Stack.Navigator>
+            )}
+          </View>
       </PlayerProvider>
     </GestureHandlerRootView>
   );
@@ -216,21 +232,21 @@ const styles = StyleSheet.create({
     borderRadius: 100,
     borderWidth: 2,
   },
-  progressBar: { width: "100%" },
+  progressBar: { width: '100%' },
   minimizedPlayerContainer: {
     position: 'absolute',
-    bottom: 105,
+    bottom: 81,
     left: 0,
     right: 0,
-    height: 60,
+    height: 70,
+    backgroundColor: '#12121F',
   },
   minimizedPlayer: {
-    backgroundColor: '#12121F',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 5,
+    paddingBottom: 1,
     zIndex: 1000,
   },
   albumArt: {

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.startingmusicapp.samedev">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <service android:name="expo.modules.notifications.notifications.service.NotificationService" android:permission="android.permission.BIND_JOB_SERVICE" android:exported="true"/>
+
+        <uses-permission android:name="android.permission.CAMERA" />
+        <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
+        <uses-permission android:name="android.permission.INTERNET" />
+        <uses-permission android:name="android.permission.NOTIFICATIONS" />
+
+        <meta-data
+            android:name="expo.modules.notifications.NOTIFICATION_BACKGROUND_MODE"
+            android:value="remote-notification" />
+
+        <activity
+            android:name="expo.modules.splashscreen.SplashScreenActivity"
+            android:label="@string/app_name"
+            android:theme="@android:style/Theme.NoTitleBar"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver android:name="expo.modules.notifications.notifications.receivers.NotificationReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </receiver>
+
+
+        <activity android:name="com.startingmusicapp.MainActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenSize"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:label="@string/app_name" />
+
+    </application>
+
+</manifest>
