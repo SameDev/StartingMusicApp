@@ -6,11 +6,10 @@ import TrackPlayer, {
   Capability, 
   AppKilledPlaybackBehavior
 } from "react-native-track-player";
-
 export class PlayerService {
   static async setupPlayer(): Promise<void> {
     try {
-      await TrackPlayer.setupPlayer({ waitForBuffer: true });
+      await TrackPlayer.setupPlayer({ waitForBuffer: true, });
       
       await TrackPlayer.updateOptions({
         capabilities: [
@@ -22,7 +21,7 @@ export class PlayerService {
         ],
         compactCapabilities: [Capability.Play, Capability.Pause, Capability.SkipToNext, Capability.SkipToPrevious],
         android: {
-          appKilledPlaybackBehavior: AppKilledPlaybackBehavior.ContinuePlayback,
+          appKilledPlaybackBehavior: AppKilledPlaybackBehavior.PausePlayback,
         },
         notificationCapabilities: [
           Capability.Play,
@@ -30,6 +29,7 @@ export class PlayerService {
           Capability.SkipToNext,
           Capability.SkipToPrevious,
         ],
+        icon: require('../assets/images/favicon-16x16.png')
       });
     } catch (error) {
       console.error("Erro ao configurar o player:", error);
@@ -153,7 +153,7 @@ export class PlayerService {
       console.error("Erro de reprodução:", error);
     });
     TrackPlayer.addEventListener(Event.RemoteDuck, async () => {
-      const deepLink = 'startingmusic://MusicPlayerScreen';
+      const deepLink = 'startingmusic://MusicPlayer';
       Linking.openURL(deepLink);
     });
   }

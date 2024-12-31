@@ -13,14 +13,17 @@ export interface Music {
   }
   
   export interface User {
+    artist?: any;
     id: string;
     email: string;
     nome: string;
     cargo: string;
     foto_perfil: string;
+    banner_perfil: string;
     data_nasc: Date;
     songs: Music[];
     tags: Tags[];
+    desc?: string;
   }
   
   export interface Tags {

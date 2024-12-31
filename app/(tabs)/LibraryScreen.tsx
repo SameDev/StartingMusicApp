@@ -1,28 +1,31 @@
-import { useThemeColor } from '@/hooks/useThemeColor';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import LibraryScreen from './LibraryScreen/LibraryScreen';
+import Curtidas from './LibraryScreen/Curtidas';
+import Playlist from './LibraryScreen/PlaylistScreen';
 
-const MyTheme = useThemeColor;
+const Stack = createNativeStackNavigator();
 
-const LibraryScreen = () => {
+const Navigation = () => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Biblioteca</Text>
-    </View>
+    <Stack.Navigator 
+        initialRouteName="LibraryScreen" 
+        screenOptions={{ headerShown: false, animation: 'slide_from_bottom' }}
+    >
+        <Stack.Screen 
+            name="LibraryScreen" 
+            component={LibraryScreen} 
+        />
+        <Stack.Screen 
+            name="Curtidas" 
+            component={Curtidas}
+        />
+        <Stack.Screen
+          name="PlaylistScreen"
+          component={Playlist}
+        />
+    </Stack.Navigator>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: MyTheme.colors.background,
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    color: '#fff',
-    fontSize: 20,
-  },
-});
-
-export default LibraryScreen;
+export default Navigation;

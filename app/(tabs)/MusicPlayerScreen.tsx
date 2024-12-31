@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, TouchableWithoutFeedback } from "react-native";
-import { FontAwesome6, MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome6, MaterialIcons, MaterialCommunityIcons, FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import Slider from "@react-native-community/slider";
 import { LinearGradient } from "expo-linear-gradient";
@@ -9,6 +9,7 @@ import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { usePlayer } from "@/components/PlayerProvider";
 import { runOnJS } from 'react-native-reanimated';
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { RepeatMode } from "react-native-track-player";
 
 type RootStackParamList = {
   Search: undefined;
@@ -20,7 +21,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList, "MusicPlayer
 
 const MusicPlayerScreen: React.FC = () => {
   const MyTheme = useThemeColor;
-  const [isLoading, setIsLoading] = useState(true);
 
   const {
     currentSong,
@@ -33,6 +33,14 @@ const MusicPlayerScreen: React.FC = () => {
     setIsPlayerVisible,
     playNext,
     playPrevious,
+    toggleRepeatMode,
+    repeatMode,
+    toggleShuffle,
+    isShuffled,
+    isLiked,
+    handleLike,
+    isLoading,
+    setLoading 
   } = usePlayer();
   const navigation = useNavigation<NavigationProp>();
 
@@ -49,14 +57,14 @@ const MusicPlayerScreen: React.FC = () => {
     setIsPlayerVisible(true);
 
     if (currentSong) {
-      setIsLoading(true)
+      setLoading(true)
       setSongInfo({
         name: currentSong.nome || 'Título indisponível',
         artist: currentSong.artista || 'Artista desconhecido',
         imageUrl: currentSong.image_url || 'https://starting-music-artista.vercel.app/img-placeholder.png',
         duration
       });
-      setIsLoading(false);
+      setLoading(false);
     } else {
       navigation.goBack();
     }
@@ -82,8 +90,7 @@ const MusicPlayerScreen: React.FC = () => {
 
   return (
     <GestureDetector gesture={swipeGesture}>
-      <View style={styles.mainContainer}>
-        <LinearGradient style={styles.mainContainer} colors={["#2B2641", "#2B2641"]}>
+        <LinearGradient style={styles.mainContainer} colors={["#191A2E", "#231251"]}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => {
@@ -91,7 +98,7 @@ const MusicPlayerScreen: React.FC = () => {
               setIsPlayerVisible(false);
             }}
           >
-            <FontAwesome6 name="arrow-left" size={24} color="#fff" />
+            <FontAwesome6 name="chevron-down" size={24} color="#fff" />
           </TouchableOpacity>
 
           <View style={styles.noSongContainer}>
@@ -104,8 +111,8 @@ const MusicPlayerScreen: React.FC = () => {
                 <Text style={styles.artistName}>{songInfo.artist}</Text>
 
                 <View style={styles.addContainer}>
-                  <TouchableOpacity onPress={playNext}>
-                    <FontAwesome6 name="heart" size={30} color="#fff" />
+                  <TouchableOpacity onPress={handleLike}>
+                    <FontAwesome name={isLiked ? 'heart' : 'heart-o'} size={30} color={isLiked ? '#E64575' : '#fff'} />
                   </TouchableOpacity>
                   <TouchableOpacity onPress={playNext}>
                     <MaterialCommunityIcons name="playlist-plus" size={35} color="#fff" />
@@ -128,8 +135,8 @@ const MusicPlayerScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.controlsContainer}>
-                  <TouchableOpacity onPress={playNext}>
-                    <FontAwesome6 name="shuffle" size={30} color="#fff" />
+                  <TouchableOpacity onPress={toggleShuffle}>
+                    <FontAwesome6 name="shuffle" size={30} color={isShuffled ? '#fff' : "#d9d9d9" } />
                   </TouchableOpacity>
 
                   <TouchableOpacity onPress={playPrevious}>
@@ -166,18 +173,21 @@ const MusicPlayerScreen: React.FC = () => {
                   <TouchableOpacity onPress={playNext}>
                     <FontAwesome6 name="forward-step" size={30} color="#fff" />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={playNext}>
-                    <FontAwesome6 name="repeat" size={30} color="#fff" />
+                  <TouchableOpacity onPress={toggleRepeatMode}>
+                    {repeatMode === RepeatMode.Off ? (
+                      <MaterialIcons name="repeat" size={30} color="#d9d9d9" />
+                    ) : repeatMode === RepeatMode.Track ? (
+                      <MaterialIcons name="repeat-one" size={30} color="#fff" />
+                    ) : repeatMode === RepeatMode.Queue ? (
+                      <MaterialIcons name="repeat" size={30} color="#fff" />
+                    ) : null}
                   </TouchableOpacity>
-                </View>
-                <View>
-                  <Text>A Seguir</Text>
+
                 </View>
               </>
             )}
           </View>
         </LinearGradient>
-      </View>
     </GestureDetector>
   );
 };
@@ -186,7 +196,18 @@ const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#202238' },
   backButton: { padding: 10, margin: 10 },
   noSongContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  albumArt: { width: 250, height: 250, borderRadius: 15, marginBottom: 15 },
+  albumArt: {
+    width: 270,
+    height: 270,
+    marginTop: -30,
+    borderRadius: 15,
+    marginBottom: 15,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 3, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
   songTitle: { fontSize: 24, color: "#fff", fontWeight: "bold", marginTop: 20 },
   artistName: { fontSize: 18, color: "#aaa" },
   progressBar: { width: "80%", marginTop: 20 },

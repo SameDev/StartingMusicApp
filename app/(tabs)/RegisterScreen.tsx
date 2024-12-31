@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useThemeColor } from '@/hooks/useThemeColor';
-import { storage, FireRef, uploadBytes, getDownloadURL } from '@/composables/firebase'; // Importe os métodos Firebase adequados
+import { storage, FireRef, uploadBytes, getDownloadURL } from '@/composables/firebase';
 
 const MyTheme = useThemeColor;
 
@@ -116,7 +116,7 @@ export default function RegisterScreen({ onRegister, onBackToLogin }: RegisterSc
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
     setDate(currentDate);
-    setValue('data_nasc', currentDate.toISOString().split('T')[0]);  // Formato YYYY-MM-DD
+    setValue('data_nasc', currentDate.toISOString().split('T')[0]); 
   };
 
   return (

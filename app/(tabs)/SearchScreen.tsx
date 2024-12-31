@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, FlatList, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -6,12 +6,14 @@ import { Album, Music, User } from '@/types/apiRef';
 import { useThemeColor } from '@/hooks/useThemeColor';
 import { FontAwesome } from "@expo/vector-icons";
 import { usePlayer } from '@/components/PlayerProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const MyTheme = useThemeColor;
+
 type RootStackParamList = {
   SearchScreen: undefined;
   MusicPlayer: undefined;
-  Artista: { artistId: string };
-  Album: { album: Album };
+  ArtistaScreen: {};
+  AlbumScreen: {};
   Playlist: { playlistId: string };
 };
 
@@ -25,8 +27,8 @@ interface SearchResults {
 }
 
 const SearchScreen: React.FC = () => {
-  
   const [query, setQuery] = useState('');
+  const [songs, setSongs] = useState<Music[]>([]);
   const [results, setResults] = useState<SearchResults>({
     albums: [],
     song: [],
@@ -35,10 +37,31 @@ const SearchScreen: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
 
-  const { setCurrentSong } = usePlayer();
-
+  const { setCurrentSong, clearPlaylist } = usePlayer();
   const navigation = useNavigation<NavigationProp>();
-  
+
+  const getCachedSongs = async () => {
+    try {
+      const cachedData = await AsyncStorage.getItem('cachedSongs');
+      return cachedData ? JSON.parse(cachedData) : null;
+    } catch (error) {
+      console.error('Erro ao buscar músicas cacheadas:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        const cachedSongs = await getCachedSongs();
+        setSongs(cachedSongs);
+      } catch (error) {
+        console.error('Erro ao buscar recomendações:', error);
+      }
+    };
+
+    fetchRecommendations();
+  }, []);
 
   const fetchSearchResults = useCallback(async () => {
     if (!query.trim()) return;
@@ -63,17 +86,27 @@ const SearchScreen: React.FC = () => {
     }
   }, [query]);
 
-  const handleSongPress = (song: Music) => {
-    setCurrentSong(song as unknown as Music); 
-    navigation.navigate('MusicPlayer'); 
+  const handleSongPress = async (song: Music) => {
+    try {
+      clearPlaylist()
+      await setCurrentSong(song);
+      navigation.navigate('MusicPlayer');
+    } catch (error) {
+      console.error('Error handling song press:', error);
+    }
+  };
+
+  const handleAlbumPress = async (album: Album) => {
+    try {
+      navigation.navigate('AlbumScreen', { album });
+    } catch (error) {
+      console.error('Error handling song press:', error);
+    }
   };
 
   const renderMusicItem = useCallback(
     ({ item }: { item: Music }) => (
-      <View
-        style={styles.musicItem}
-        onTouchEnd={() => handleSongPress(item)}
-      >
+      <View style={styles.musicItem} onTouchEnd={() => handleSongPress(item)}>
         <Image source={{ uri: item.image_url }} style={styles.musicImage} />
         <View style={styles.musicInfo}>
           <Text style={styles.musicName}>{item.nome}</Text>
@@ -82,12 +115,8 @@ const SearchScreen: React.FC = () => {
           </Text>
         </View>
         <TouchableOpacity onPress={() => handleSongPress(item)}>
-          <FontAwesome
-                name={"play"}
-                size={20}
-                color="#fff"
-              />
-          </TouchableOpacity>
+          <FontAwesome name={"play"} size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
     ),
     [navigation]
@@ -98,18 +127,8 @@ const SearchScreen: React.FC = () => {
       if (item.cargo === 'USUARIO') return null;
 
       return (
-        <View
-          style={styles.musicItem}
-          onTouchEnd={() => navigation.navigate('Artista', { artistId: item.id })}
-        >
-          <Image
-            source={{
-              uri:
-                item.foto_perfil ||
-                'https://starting-music-artista.vercel.app/user-placeholder.jpeg',
-            }}
-            style={styles.musicImage}
-          />
+        <View style={styles.musicItem} onTouchEnd={() => navigation.navigate('ArtistaScreen', { artist: item })}>
+          <Image source={{ uri: item.foto_perfil || 'https://starting-music-artista.vercel.app/user-placeholder.jpeg' }} style={styles.musicImage} />
           <View style={styles.musicInfo}>
             <Text style={styles.musicName}>{item.nome}</Text>
           </View>
@@ -121,18 +140,8 @@ const SearchScreen: React.FC = () => {
 
   const renderAlbumItem = useCallback(
     ({ item }: { item: Album }) => (
-      <View
-        style={styles.musicItem}
-        onTouchEnd={() => navigation.navigate('Album', { album: item })}
-      >
-        <Image
-          source={{
-            uri:
-              item.image_url ||
-              'https://starting-music-artista.vercel.app/user-placeholder.jpeg',
-          }}
-          style={styles.musicImage}
-        />
+      <View style={styles.musicItem} onTouchEnd={() => handleAlbumPress(item)}>
+        <Image source={{ uri: item.image_url || 'https://starting-music-artista.vercel.app/user-placeholder.jpeg' }} style={styles.musicImage} />
         <View style={styles.musicInfo}>
           <Text style={styles.musicName}>{item.nome}</Text>
           <Text style={styles.musicArtist}>
@@ -146,18 +155,8 @@ const SearchScreen: React.FC = () => {
 
   const renderPlaylistItem = useCallback(
     ({ item }: { item: Music }) => (
-      <View
-        style={styles.musicItem}
-        onTouchEnd={() => navigation.navigate('Playlist', { playlistId: item.id })}
-      >
-        <Image
-          source={{
-            uri:
-              item.image_url ||
-              'https://starting-music-artista.vercel.app/user-placeholder.jpeg',
-          }}
-          style={styles.musicImage}
-        />
+      <View style={styles.musicItem} onTouchEnd={() => navigation.navigate('Playlist', { playlistId: item.id })}>
+        <Image source={{ uri: item.image_url || 'https://starting-music-artista.vercel.app/user-placeholder.jpeg' }} style={styles.musicImage} />
         <View style={styles.musicInfo}>
           <Text style={styles.musicName}>{item.nome}</Text>
         </View>
@@ -166,17 +165,30 @@ const SearchScreen: React.FC = () => {
     [navigation]
   );
 
+  const renderSongItem = (song: Music) => (
+    <View style={styles.musicItem} key={`song-${song.id}`} onTouchEnd={() => handleSongPress(song)}>
+      <Image source={{ uri: song.image_url }} style={styles.musicImage} />
+      <View style={styles.musicInfo}>
+        <Text style={styles.musicName}>{song.nome}</Text>
+        <Text style={styles.musicArtist}>
+          {song.artista} • {song.duracao}
+        </Text>
+      </View>
+      <TouchableOpacity onPress={() => handleSongPress(song)}>
+        <FontAwesome name={"play"} size={20} color="#fff" />
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderSection = (title: string, data: any[], renderItem: any) => (
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      <FlatList 
-      scrollEnabled={false}
+      <FlatList
+        scrollEnabled={false}
         data={data}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
-        ListEmptyComponent={
-          <Text style={styles.noResultsText}>Nenhum {title.toLowerCase()} encontrado</Text>
-        }
+        ListEmptyComponent={<Text style={styles.noResultsText}>Nenhum {title.toLowerCase()} encontrado</Text>}
       />
     </View>
   );
@@ -198,15 +210,14 @@ const SearchScreen: React.FC = () => {
           <>
             {results.albums.length > 0 && renderSection('Álbuns', results.albums, renderAlbumItem)}
             {results.song.length > 0 && renderSection('Músicas', results.song, renderMusicItem)}
-            {results.playlists.length > 0 &&
-              renderSection('Playlists', results.playlists, renderPlaylistItem)}
+            {results.playlists.length > 0 && renderSection('Playlists', results.playlists, renderPlaylistItem)}
             {results.artists.length > 0 && renderSection('Artistas', results.artists, renderArtistItem)}
-            {results.albums.length === 0 &&
-              results.song.length === 0 &&
-              results.playlists.length === 0 &&
-              results.artists.length === 0 && (
-                <Text style={styles.noResultsText}>Nenhum resultado encontrado</Text>
-              )}
+            {results.albums.length === 0 && results.song.length === 0 && results.playlists.length === 0 && results.artists.length === 0 && (
+              <>
+                <Text style={styles.noResultsText}>Nenhum resultado encontrado, faça uma pesquisa, ou veja as recomendações abaixo:</Text>
+                {songs.length > 0 ? songs.map(renderSongItem) : <Text style={styles.noResultsText}>Nenhuma recomendação disponível.</Text>}
+              </>
+            )}
           </>
         )}
       </ScrollView>

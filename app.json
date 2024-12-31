@@ -20,8 +20,10 @@
       "bundleIdentifier": "com.startingmusicapp.samedev",  
       "infoPlist": {
         "UIBackgroundModes": ["fetch", "remote-notification"]
-      }
+      },
+      "icon":"./assets/images/apple-touch-icon.png"
     },
+    "icon":"./assets/images/favicon.ico",
     "android": {
       "package": "com.startingmusicapp.samedev",
       "useNextNotificationsApi": true, 
@@ -32,11 +34,11 @@
         "NOTIFICATIONS"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo.png",  
+        "foregroundImage": "./assets/images/apple-touch-icon.png",  
         "backgroundColor": "#202238"
       },
       "notification": {
-        "icon": "./assets/images/logo.png",
+        "icon": "./assets/images/favicon-16x16.png",
         "color": "#202238",
         "sound": true
       }
