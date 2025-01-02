@@ -10,6 +10,7 @@ import {
   ImageBackground,
   ScrollView,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,6 +18,8 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { Album, User } from '@/types/apiRef';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { FireRef, getDownloadURL, storage, uploadBytes } from '@/composables/firebase';
+import axios from 'axios';
 
 const MyTheme = useThemeColor;
 
@@ -42,6 +45,7 @@ const UserScreen = ({ navigation }: { navigation: NavigationProp }) => {
   const [profileImage, setProfileImage] = useState('');
   const [bannerImage, setBannerImage] = useState('');
   const [jwtToken, setToken] = useState('');
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -63,7 +67,7 @@ const UserScreen = ({ navigation }: { navigation: NavigationProp }) => {
 
   const handleImagePick = async (type: string) => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -76,6 +80,15 @@ const UserScreen = ({ navigation }: { navigation: NavigationProp }) => {
     }
   };
 
+  const uploadImage = async (uri: string, folder: string) => {
+    const imageRef = FireRef(storage, `${folder}/${Date.now()}`);
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const imageSnapshot = await uploadBytes(imageRef, blob);
+    return getDownloadURL(imageSnapshot.ref);
+  };
+
+
   const handleSaveChanges = async () => {
     if (!newName.trim()) {
       Alert.alert('Erro', 'O nome não pode estar vazio.');
@@ -83,42 +96,62 @@ const UserScreen = ({ navigation }: { navigation: NavigationProp }) => {
     }
 
     try {
-      console.log(userData.id)
-      const response = await fetch(`https://starting-music.onrender.com/user/update/${userData.id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: jwtToken || '',
-        },
-        body: JSON.stringify({
-          nome: newName,
-          descricao: userData.desc,
-          url: profileImage,
-          email: userData.email,
-          banner: bannerImage,
-          data_nasc: userData.data_nasc,
-        }),
-      });
+      setIsLoading(true);
 
-      if (response.ok) {
-        const updatedUser = await response.json();
+      let profileImageUrl = profileImage;
+      let bannerImageUrl = bannerImage;
+
+      if (profileImage !== userData.foto_perfil) {
+        profileImageUrl = await uploadImage(profileImage, 'images');
+      } else if (bannerImage !== userData.banner_perfil) {
+        bannerImageUrl = await uploadImage(bannerImage, 'banners');
+      }
+
+      const payload = {
+        nome: newName,
+        descricao: userData.desc,
+        url: profileImageUrl,
+        email: userData.email,
+        banner: bannerImageUrl,
+        data_nasc: userData.data_nasc,
+      };
+
+
+      const response = await axios.post(
+        `https://starting-music.onrender.com/user/update/${userData.id}`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: jwtToken || '',
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        const updatedUser = response.data;
         setUserData(updatedUser.user);
         await AsyncStorage.setItem('userData', JSON.stringify(updatedUser.user));
         Alert.alert('Sucesso', 'Alterações salvas com sucesso!');
       } else {
+        console.log('Erro na resposta do servidor:', response.data);
         throw new Error('Erro ao salvar alterações');
       }
     } catch (error) {
-      console.error(error);
+      console.error('Erro na solicitação de rede:', error);
       Alert.alert('Erro', 'Não foi possível salvar as alterações.');
+    } finally {
+      setIsLoading(false);
     }
   };
+
+
 
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem('userData');
       await AsyncStorage.removeItem('jwtToken');
-      
+
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
       Alert.alert('Erro', 'Não foi possível fazer logout. Tente novamente.');
@@ -170,7 +203,11 @@ const UserScreen = ({ navigation }: { navigation: NavigationProp }) => {
       </View>
 
       <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
-        <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+        {isLoading ? (
+          <ActivityIndicator color='#fff' size={20} />
+        ) : (
+          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );

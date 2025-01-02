@@ -78,6 +78,8 @@ export default function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             banner_perfil,
           })
         );
+        const data_atual = new Date()
+        await AsyncStorage.setItem("Data", data_atual.getDay().toString())
 
         onLogin();
       } else {

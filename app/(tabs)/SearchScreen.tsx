@@ -14,7 +14,7 @@ type RootStackParamList = {
   MusicPlayer: undefined;
   ArtistaScreen: {};
   AlbumScreen: {};
-  Playlist: { playlistId: string };
+  PlaylistScreen: {};
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'SearchScreen'>;
@@ -155,7 +155,7 @@ const SearchScreen: React.FC = () => {
 
   const renderPlaylistItem = useCallback(
     ({ item }: { item: Music }) => (
-      <View style={styles.musicItem} onTouchEnd={() => navigation.navigate('Playlist', { playlistId: item.id })}>
+      <View style={styles.musicItem} onTouchEnd={() => navigation.navigate('PlaylistScreen', item)}>
         <Image source={{ uri: item.image_url || 'https://starting-music-artista.vercel.app/user-placeholder.jpeg' }} style={styles.musicImage} />
         <View style={styles.musicInfo}>
           <Text style={styles.musicName}>{item.nome}</Text>

@@ -161,6 +161,23 @@ export default function App() {
   const [isRegistering, setIsRegistering] = useState(false);
   const MyTheme = useThemeColor;
 
+  useEffect(() => {
+    const loadUserData = async () => {
+      const storedJwt = await AsyncStorage.getItem('jwtToken');
+      const data = await AsyncStorage.getItem('Data');
+
+      const data_atual = new Date().getDay().toString();
+
+      if (data != data_atual) {
+        if (storedJwt) {
+          setIsAuthenticated(true)
+        }
+      }
+    };
+
+    loadUserData();
+  }, []);
+
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: MyTheme.colors.background }}>
       <PlayerProvider>

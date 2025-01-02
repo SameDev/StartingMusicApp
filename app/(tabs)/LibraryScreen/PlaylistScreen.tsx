@@ -44,12 +44,10 @@ const Playlist = ({ route, navigation }: PlaylistScreenProps) => {
     const [loading, setLoading] = useState(true);
     const { setCurrentSong, setPlaylist } = usePlayer();
     const [jwtToken, setJwtToken] = useState('');
-
     const [isEditing, setIsEditing] = useState(false);
     const [newName, setNewName] = useState(nome);
     const [newDescription, setNewDescription] = useState(descricao);
     const [newPhoto, setNewPhoto] = useState('');
-    const [imageUrl, setImageUrl] = useState("");
 
     useEffect(() => {
         const loadToken = async () => {
@@ -75,8 +73,9 @@ const Playlist = ({ route, navigation }: PlaylistScreenProps) => {
 
     const handleRemoveSong = (songId: string) => {
         axios
-            .delete(`https://starting-music.onrender.com/playlist/${id}/song/${songId}`, {
+            .delete(`https://starting-music.onrender.com/playlist/delete/song/${id}`, {
                 headers: { Authorization: `${jwtToken}` },
+                data: { musicas: [songId] }
             })
             .then(() => {
                 setSongs((prevSongs) => prevSongs.filter((song) => song.id !== songId));
@@ -85,6 +84,7 @@ const Playlist = ({ route, navigation }: PlaylistScreenProps) => {
                 console.error("Erro ao remover música da playlist:", error);
             });
     };
+    
 
     const renderItem = (item: Music, index: number) => {
         const renderRightActions = () => (
@@ -134,60 +134,81 @@ const Playlist = ({ route, navigation }: PlaylistScreenProps) => {
 
     const handleImageUpload = async (type: 'imageUrl') => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: 'images',
-            allowsEditing: true,
-            quality: 1,
+          mediaTypes: 'images',
+          allowsEditing: true,
+          quality: 1,
+          aspect: [4, 3]
         });
-
+    
         if (!result.canceled && result.assets && result.assets.length > 0) {
-            const selectedUri = result.assets[0].uri;
-            setNewPhoto(selectedUri)
-            setImageUrl(selectedUri);
-            setValue(type, selectedUri);
+          const selectedUri = result.assets[0].uri;
+          setNewPhoto(selectedUri);
+          setValue(type, selectedUri);
         }
-    };
-
-
+      };
+    
+    
     const uploadImage = async (uri: string, folder: string) => {
         const imageRef = FireRef(storage, `${folder}/${Date.now()}`);
-        const imageSnapshot = await uploadBytes(imageRef, dataURLtoBlob(uri));
+        const response = await fetch(uri);
+        const blob = await response.blob();
+        const imageSnapshot = await uploadBytes(imageRef, blob);
         return getDownloadURL(imageSnapshot.ref);
     };
 
-    const dataURLtoBlob = (dataURL: string) => {
-        const arr = dataURL.split(',');
-        const mimeMatch = arr[0]?.match(/:(.*?);/);
-        const mime = mimeMatch ? mimeMatch[1] : '';
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new Blob([u8arr], { type: mime });
-    };
-
-
 
     const handleUpdatePlaylist = async () => {
-        const uploadedImageUrl = await uploadImage(imageUrl, 'images');
-        console.log(uploadedImageUrl)
         try {
+            let updatedPhotoUrl = newPhoto;
+            if (newPhoto !== foto) {
+                updatedPhotoUrl = await uploadImage(newPhoto, 'images');
+            }
 
             const response = await axios.post(
                 `https://starting-music.onrender.com/playlist/update/${id}`,
-                { nome: newName, descricao: newDescription, foto: uploadedImageUrl },
-                { headers: { Authorization: `${jwtToken}` } }
+                {
+                    nome: newName,
+                    descricao: newDescription,
+                    foto: updatedPhotoUrl,
+                },
+                {
+                    headers: { Authorization: `${jwtToken}` },
+                }
             );
+
             if (response.status === 201) {
                 Alert.alert('Sucesso', 'Playlist atualizada com sucesso!');
                 setIsEditing(false);
+                navigation.navigate('LibraryScreen');
+            } else {
+                Alert.alert('Erro', 'Não foi possível atualizar a playlist.');
             }
         } catch (error) {
-            console.error('Erro ao atualizar playlist:', error);
-            Alert.alert('Erro', 'Não foi possível atualizar a playlist.');
+            console.error('Erro ao atualizar a playlist:', error);
+            Alert.alert('Erro', 'Ocorreu um erro ao tentar atualizar a playlist.');
         }
     };
+
+    const handleDeletePlaylist = async () => {
+        try {
+            const response = await axios.delete(
+            `https://starting-music.onrender.com/playlist/delete/${id}`,
+            { headers: { Authorization: `${jwtToken}` },}
+            )
+
+            if (response.status == 200) {
+                Alert.alert('Sucesso', 'Playlist deletada!');
+                setIsEditing(false);
+                navigation.navigate('LibraryScreen');
+            } else {
+                Alert.alert('Erro', 'Não foi possível atualizar a playlist.');
+            }
+        }
+        catch (error) {
+            console.log(error)
+            Alert.alert("Erro", 'Não foi possível deletar a playlist')
+        }
+    }
 
     return (
         <ScrollView contentContainerStyle={styles.list} style={styles.container}>
@@ -206,19 +227,17 @@ const Playlist = ({ route, navigation }: PlaylistScreenProps) => {
 
                             <TextInput
                                 style={styles.input}
-                                placeholder="Nome da Playlist"
+                                placeholder="Novo nome"
                                 value={newName}
                                 onChangeText={setNewName}
-                                placeholderTextColor={MyTheme.colors.text}
                             />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Descrição da Playlist"
+                                placeholder="Nova descrição"
                                 value={newDescription}
                                 onChangeText={setNewDescription}
-                                multiline
-                                placeholderTextColor={MyTheme.colors.text}
                             />
+                            
 
                             <View style={styles.modalButtons}>
                                 <Pressable style={[styles.button, styles.buttonClose]} onPress={handleUpdatePlaylist}>
@@ -245,7 +264,7 @@ const Playlist = ({ route, navigation }: PlaylistScreenProps) => {
                 <Text style={styles.description}>{descricao}</Text>
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 20, alignItems: 'center' }}>
-                    <TouchableOpacity style={{ marginTop: 10 }} onPress={() => setIsEditing(true)}>
+                    <TouchableOpacity style={{ marginTop: 10 }} onPress={() => handleDeletePlaylist()}>
                         <View style={{
                             backgroundColor: '#E64575',
                             width: 42,

@@ -36,33 +36,25 @@ export default function RegisterScreen({ onRegister, onBackToLogin }: RegisterSc
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
+      aspect: [4, 3]
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const selectedUri = result.assets[0].uri;
-        setImageUrl(selectedUri);
-        setValue(type, selectedUri);
+      setImageUrl(selectedUri);
+      setValue(type, selectedUri);
     }
   };
 
-  const dataURLtoBlob = (dataURL: string) => {
-    const arr = dataURL.split(',');
-    const mimeMatch = arr[0]?.match(/:(.*?);/);
-    const mime = mimeMatch ? mimeMatch[1] : '';
-    const bstr = atob(arr[1]);
-    let n = bstr.length;
-    const u8arr = new Uint8Array(n);
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new Blob([u8arr], { type: mime });
-  };
 
   const uploadImage = async (uri: string, folder: string) => {
     const imageRef = FireRef(storage, `${folder}/${Date.now()}`);
-    const imageSnapshot = await uploadBytes(imageRef, dataURLtoBlob(uri));
+    const response = await fetch(uri);
+    const blob = await response.blob();
+    const imageSnapshot = await uploadBytes(imageRef, blob);
     return getDownloadURL(imageSnapshot.ref);
   };
+
 
   const onSubmit: SubmitHandler<RegisterFormInputs> = async (data) => {
     try {
@@ -108,6 +100,7 @@ export default function RegisterScreen({ onRegister, onBackToLogin }: RegisterSc
         Alert.alert("Erro", "Erro ao processar o cadastro.");
       }
     } catch (error) {
+      console.error(error)
       Alert.alert("Erro de conexão", "Não foi possível conectar ao servidor.");
     }
   };
@@ -116,7 +109,7 @@ export default function RegisterScreen({ onRegister, onBackToLogin }: RegisterSc
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
     setDate(currentDate);
-    setValue('data_nasc', currentDate.toISOString().split('T')[0]); 
+    setValue('data_nasc', currentDate.toISOString().split('T')[0]);
   };
 
   return (

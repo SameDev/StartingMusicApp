@@ -5,6 +5,7 @@ import ArtistScreen from './AllScreen/ArtistaScreen';
 import AlbumScreen from './AllScreen/AlbumScreen';
 import SearchScreen from './SearchScreen';
 import UserScreen from './AllScreen/UserScreen';
+import Playlist from './LibraryScreen/PlaylistScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,10 @@ const Home = ({ initialRoute }: { initialRoute: string }) => {
             name="UserScreen"
             component={UserScreen}
             options={{animation: 'slide_from_bottom'}}
+        />
+        <Stack.Screen
+          name="PlaylistScreen"
+          component={Playlist}
         />
     </Stack.Navigator>
   );

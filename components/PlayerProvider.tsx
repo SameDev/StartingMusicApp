@@ -131,33 +131,36 @@ export const PlayerProvider = ({ children }: { children: ReactNode }): JSX.Eleme
     }
   };
 
+  const setPlaylist = async (songs: Music[]): Promise<void> => {
+    setPlaylistState(songs);
+    await TrackPlayer.reset();
+    const tracks = songs.map((song) => ({
+      id: song.id,
+      url: song.url,
+      title: song.nome,
+      artist: song.artista,
+      artwork: song.image_url,
+    }));
+    await TrackPlayer.add(tracks);
+  };
+  const clearPlaylist = (): void => {
+    setPlaylistState([]);
+    TrackPlayer.reset();
+  };
   const playNext = async (): Promise<void> => {
     try {
-      if (playlist.length > 1) {
-        const activeTrackIndex = await TrackPlayer.getActiveTrackIndex();
-        if (activeTrackIndex !== undefined) {
-          const nextTrackIndex = (activeTrackIndex + 1) % playlist.length;
-          await TrackPlayer.skipToNext();
-          setCurrentSong(playlist[nextTrackIndex]);
-        }
-      } else {
-        console.warn("A playlist possui apenas uma música.");
-      }
+      setLoading(true);
+      await TrackPlayer.skipToNext();
     } catch (error) {
-      console.error("Erro ao pular para a próxima música:", error);
+      console.warn("Não há próxima faixa na lista de reprodução.", error);
     }
   };
-
   const playPrevious = async (): Promise<void> => {
     try {
-      const currentIndex = await TrackPlayer.getActiveTrackIndex();
-      if (currentIndex !== undefined && currentIndex > 0) {
-        const previousIndex = currentIndex - 1;
-        await TrackPlayer.skipToPrevious();
-        setCurrentSong(playlist[previousIndex]);
-      }
+      setLoading(true);
+      await TrackPlayer.skipToPrevious();
     } catch (error) {
-      console.error("Erro ao pular para a música anterior:", error);
+      console.warn("Não há faixa anterior na lista de reprodução.", error);
     }
   };
 
@@ -201,26 +204,6 @@ export const PlayerProvider = ({ children }: { children: ReactNode }): JSX.Eleme
     }
   };
 
-  const setPlaylist = async (songs: Music[]): Promise<void> => {
-    setPlaylistState(songs);
-
-    await TrackPlayer.reset();
-    const tracks = songs.map((song) => ({
-      id: song.id,
-      url: song.url,
-      title: song.nome,
-      artist: song.artista,
-      artwork: song.image_url,
-    }));
-
-    await TrackPlayer.add(tracks);
-  };
-
-  const clearPlaylist = (): void => {
-    setPlaylistState([]);
-    TrackPlayer.reset();
-  };
-
   const handlePlayPause = async (): Promise<void> => {
     try {
       if (playbackState.state === State.Playing) {
@@ -239,14 +222,9 @@ export const PlayerProvider = ({ children }: { children: ReactNode }): JSX.Eleme
   };
 
   const onPlaybackQueueEnded = (): void => {
-    const currentTrackIndex = playlist.findIndex((song) => song.id === currentSong?.id);
-    if (currentTrackIndex !== -1) {
-      const newPlaylist = [...playlist];
-      newPlaylist.splice(currentTrackIndex, 1);
-      setPlaylistState(newPlaylist);
-      const newActiveTrackIndex = Math.max(currentTrackIndex - 1, 0);
-      setCurrentSong(newPlaylist[newActiveTrackIndex] || null); 
-    }
+    console.log('A lista de reprodução terminou.');
+    setCurrentSongState(null);
+    setIsPlayerVisible(false);
   };
 
   useEffect(() => {
@@ -264,18 +242,43 @@ export const PlayerProvider = ({ children }: { children: ReactNode }): JSX.Eleme
   }, [isPlayerInitialized]);
   
 
-  useTrackPlayerEvents(
-    [Event.PlaybackActiveTrackChanged, Event.PlaybackQueueEnded],
-    async (event) => {
-      if (event.type === Event.PlaybackQueueEnded) {
-        onPlaybackQueueEnded();
-      } else if (event.type === Event.PlaybackActiveTrackChanged) {
-        if (event.track === null) {
-          setCurrentSongState(null);
-        }
+  useTrackPlayerEvents([
+    Event.PlaybackActiveTrackChanged,
+    Event.PlaybackQueueEnded
+  ], async (event) => {
+    if (event.type === Event.PlaybackQueueEnded) {
+      onPlaybackQueueEnded();
+    } else if (event.type === Event.PlaybackActiveTrackChanged) {
+      if (event.track === null) {
+        setCurrentSongState(null);
       }
     }
-  );
+  });
+
+  useEffect(() => {
+    const syncCurrentSong = async () => {
+      try {
+        const track = await TrackPlayer.getActiveTrack();
+        if (track) {
+          setCurrentSongState({
+            id: track.id as string,
+            url: track.url as string,
+            nome: track.title as string,
+            artista: track.artist as string,
+            image_url: track.artwork as string,
+          });
+        } else {
+          setCurrentSongState(null);
+        }
+      } catch (error) {
+        console.error("Erro ao sincronizar música atual:", error);
+      }
+    };
+  
+    const interval = setInterval(syncCurrentSong, 1000);
+  
+    return () => clearInterval(interval);
+  }, []);  
 
   return (
     <PlayerContext.Provider

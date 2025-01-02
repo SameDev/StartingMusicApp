@@ -25,6 +25,14 @@ export interface Music {
     tags: Tags[];
     desc?: string;
   }
+
+  export interface Playlist {
+    id: string;
+    nome: string;
+    descricao: string;
+    musicas: Music[];
+    foto: string;
+  }
   
   export interface Tags {
     id: string;
